@@ -11,6 +11,23 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
     raise ValueError("❌ Error: No se encontraron las credenciales de Telegram en los Secrets de GitHub.")
 
+# Función para enviar mensaje por Telegram
+def send_telegram_alert(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
+    
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code != 200:
+            print(f"⚠️ Error al enviar alerta: {response.text}")
+        else:
+            print(f"✅ Mensaje enviado: {message}")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Error en la solicitud HTTP: {e}")
+
+# Enviar mensaje de prueba al principio
+send_telegram_alert("✅ Prueba de alerta: el bot está funcionando correctamente.")
+
 # Listas de empresas
 argentinian_tickers = ['YPF', 'TS', 'GGAL', 'BBVA', 'LOMA', 'MELI']
 international_tickers = ['AAPL', 'GOOG', 'MSFT', 'AMZN']
@@ -51,19 +68,7 @@ def detect_anomalies(df, ticker):
         return True, latest_volume, rolling_avg, price_change * 100
     return False, latest_volume, rolling_avg, price_change * 100
 
-# Función para enviar mensaje por Telegram
-def send_telegram_alert(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
-    
-    try:
-        response = requests.post(url, json=payload)
-        if response.status_code != 200:
-            print(f"⚠️ Error al enviar alerta: {response.text}")
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Error en la solicitud HTTP: {e}")
-
-# Revisar todas las empresas y enviar alertas
+# Revisar todas las empresas y enviar alertas si hay anomalías
 alertas = []
 for ticker, df in dataframes.items():
     is_anomaly, latest_volume, avg_volume, price_change = detect_anomalies(df, ticker)
@@ -74,8 +79,6 @@ for ticker, df in dataframes.items():
                f"📊 Promedio 30 días: {avg_volume:,.2f}\n"
                f"📉 Cambio en precio: {price_change:.2f}%")
         alertas.append(msg)
-
-send_telegram_alert("✅ Prueba de alerta: el bot está funcionando correctamente.")
 
 # Enviar alertas por Telegram si hay anomalías
 if alertas:
