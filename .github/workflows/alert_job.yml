@@ -1,29 +1,25 @@
-name: Stocks Alert Bot
+name: Stock Alert Workflow
 
 on:
-  schedule:
-    - cron: '0 14 * * *'  # Runs every day at 14:00 UTC
-  workflow_dispatch:  # Allows manual execution
+  workflow_dispatch: # Esto permite ejecutar el workflow manualmente desde la interfaz de GitHub
 
 jobs:
-  run_script:
+  alert:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.8'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
 
-      - name: Run the script
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python src/main.py
+      - name: Run the stock alert script
+        run: |
+          python src/main.py
 
